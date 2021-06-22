@@ -27,11 +27,11 @@ const downloadFile = uri => {
     anchor.id = DownloaderId;
     document.body.appendChild(anchor);
   }
-  anchor.href = uri;
+  anchor["href"] = uri;
   anchor.click();
 };
 
-export const ExampleWithExport = ({ children, filters }) => {
+export const ExampleWithExport = ({ children }) => {
   const [
     {
       exportFunction,
@@ -42,17 +42,14 @@ export const ExampleWithExport = ({ children, filters }) => {
       exporting
     },
     setState
-  ] =
-    useState <
-    IExampleWithExportState >
-    {
-      showExportDialog: false,
-      errorMessage: undefined,
-      exportFunction: () => undefined,
-      downloadUri: undefined,
-      exportConfig: undefined,
-      exporting: false
-    };
+  ] = useState({
+    showExportDialog: false,
+    errorMessage: undefined,
+    exportFunction: config => undefined,
+    downloadUri: undefined,
+    exportConfig: undefined,
+    exporting: false
+  });
 
   const onExportReady = exportFunction =>
     setState(oldState => ({ ...oldState, exportFunction }));
