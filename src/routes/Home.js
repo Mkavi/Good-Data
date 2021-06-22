@@ -15,6 +15,7 @@ import { HeaderPredicates } from "@gooddata/sdk-ui";
 import ExcelExport from "./ExcelExport";
 import CSVExport from "./CSVExport";
 import "../sai.css";
+import { GDModal } from "../components/Modal";
 // import { PieChart } from "@gooddata/sdk-ui-charts/dist/charts/pieChart/PieChart";
 
 export default () => {
@@ -42,7 +43,11 @@ export default () => {
     }
   };
 
-  console.log(filters);
+  const [modalData, setModalData] = useState({ show: false, data: null });
+
+  const barChartClickHanlder = data => {
+    setModalData({ show: true, data });
+  };
 
   return (
     <>
@@ -154,7 +159,7 @@ export default () => {
             insight={"abt4T3CjejSr"}
             onDrill={event => {
               const result = event.dataView;
-              console.log(result);
+              barChartClickHanlder(event.drillContext?.intersection || []);
             }}
             drillableItems={[
               HeaderPredicates.identifierMatch("label.products.product_name"),
@@ -196,6 +201,15 @@ export default () => {
           />
         </div>
       </div>
+
+      <GDModal
+        open={modalData.show}
+        onClose={() => {
+          setModalData({ show: false, data: null });
+        }}
+      >
+        <div>Sample, {JSON.stringify(modalData.data)}</div>
+      </GDModal>
     </>
   );
 };
