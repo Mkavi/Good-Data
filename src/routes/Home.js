@@ -13,9 +13,11 @@ import { InsightView } from "@gooddata/sdk-ui-ext";
 import * as Ldm from "../md/full";
 import { HeaderPredicates } from "@gooddata/sdk-ui";
 import ExcelExport from "./ExcelExport";
-import CSVExport from "./CSVExport";
+// import CSVExport from "./CSVExport";
 import "../sai.css";
 import { GDModal } from "../components/Modal";
+import { GDHighCharts } from "../components/HighCharts";
+
 // import { PieChart } from "@gooddata/sdk-ui-charts/dist/charts/pieChart/PieChart";
 
 export default () => {
@@ -81,6 +83,87 @@ export default () => {
       attr: Ldm.CustomerName
     }
   ];
+
+  const getChartData = () => {
+    const colors = {
+      cancelled: "rgb(195,255,176)",
+      delivered: "rgb(175,232,255)",
+      returned: "rgb(255,143,179)"
+    };
+
+    return [
+      {
+        name: "Cancelled",
+        y: 0.1,
+        color: colors.cancelled
+      },
+      {
+        name: "Delivered",
+        y: 6.2,
+        color: colors.delivered
+      },
+      {
+        name: "Returned",
+        y: 2.6,
+        color: colors.returned
+      }
+    ];
+  };
+
+  const getHightChartsConfig = () => ({
+    chart: {
+      type: "pie"
+    },
+    title: null,
+    subtitle: null,
+    plotOptions: {
+      pie: {
+        shadow: false,
+        center: ["50%", "50%"]
+      }
+    },
+    tooltip: {
+      valueSuffix: "%"
+    },
+    legend: {
+      enabled: true
+      // align: 'right',
+      // verticalAlign: 'top',
+      // y: 60,
+      // layout: 'vertical'
+    },
+    series: [
+      {
+        name: "Versions",
+        showInLegend: true,
+        data: getChartData(),
+        size: "80%",
+        innerSize: "60%",
+        dataLabels: {},
+        id: "versions"
+      }
+    ],
+    responsive: {
+      rules: [
+        {
+          condition: {
+            maxWidth: 400
+          },
+          chartOptions: {
+            series: [
+              {},
+              {
+                id: "versions",
+                dataLabels: {
+                  enabled: false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  });
 
   const getFilterText = attr => {
     const identifier = attr.attribute?.displayForm?.identifier;
@@ -231,11 +314,7 @@ export default () => {
           />
         </div>
         <div className="block" style={{ height: 300 }}>
-          <InsightView
-            insight={"ab94Ssflh6Xk"}
-            config={{ legend: { position: "bottom" } }}
-            filters={filters}
-          />
+          <GDHighCharts options={getHightChartsConfig()} />
         </div>{" "}
         <br></br>
         <div className="clr"></div>
