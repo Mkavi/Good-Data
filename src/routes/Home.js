@@ -43,26 +43,86 @@ export default () => {
     }
   };
 
+  console.log(filters);
+
   const [modalData, setModalData] = useState({ show: false, data: null });
 
   const barChartClickHanlder = data => {
     setModalData({ show: true, data });
   };
 
+  const ldmFilters = [
+    {
+      name: "Order Status",
+      attr: Ldm.OrderStatus
+    },
+    {
+      name: "Product Category",
+      attr: Ldm.ProductCategory
+    },
+    {
+      name: "Product Name",
+      attr: Ldm.ProductName
+    },
+    {
+      name: "Customer Region",
+      attr: Ldm.CustomerRegion
+    },
+    {
+      name: "Customer State",
+      attr: Ldm.CustomerState
+    },
+    {
+      name: "Customer City",
+      attr: Ldm.CustomerCity
+    },
+    {
+      name: "Customer Name",
+      attr: Ldm.CustomerName
+    }
+  ];
+
+  const getFilterText = attr => {
+    const identifier = attr.attribute?.displayForm?.identifier;
+
+    const identified = filters.find(fltr => {
+      const filterName =
+        (fltr.negativeAttributeFilter || fltr.positiveAttributeFilter || {})
+          .displayForm?.identifier || "";
+      return identifier === filterName;
+    });
+
+    if (identified) {
+      const filterVlaue =
+        identified.negativeAttributeFilter ||
+        identified.positiveAttributeFilter ||
+        {};
+      if (filterVlaue.notIn?.values?.length || filterVlaue.in?.values?.length) {
+        return "Custom";
+      } else {
+        return "All";
+      }
+    } else {
+      return "All";
+    }
+  };
+
   return (
     <>
       <h3>Orders</h3>
       <div className="container1">
-        <div className="filter">
-          <span className="label_filter">Order Status</span> <br></br>
-          <AttributeFilter
-            filter={newNegativeAttributeFilter(Ldm.OrderStatus, [])}
-            onApply={updateFilters}
-            title="All"
-          />
-        </div>
-        <div className="filter">
-          <span className="label_filter">Product Category</span> <br></br>
+        {ldmFilters.map(f => (
+          <div className="filter" key={f.name}>
+            <span className="label_filter">{f.name}</span>
+            <AttributeFilter
+              filter={newNegativeAttributeFilter(f.attr, [])}
+              onApply={updateFilters}
+              title={getFilterText(f.attr)}
+            />
+          </div>
+        ))}
+        {/*        <div className="filter">
+          <span className="label_filter">Product Category</span>
           <AttributeFilter
             filter={newNegativeAttributeFilter(Ldm.ProductCategory, [])}
             onApply={updateFilters}
@@ -70,7 +130,7 @@ export default () => {
           />
         </div>
         <div className="filter">
-          <span className="label_filter">Product Name</span> <br></br>
+          <span className="label_filter">Product Name</span>
           <AttributeFilter
             filter={newNegativeAttributeFilter(Ldm.ProductName, [])}
             onApply={updateFilters}
@@ -78,7 +138,7 @@ export default () => {
           />
         </div>
         <div className="filter">
-          <span className="label_filter">Customer Region</span> <br></br>
+          <span className="label_filter">Customer Region</span>
           <AttributeFilter
             filter={newNegativeAttributeFilter(Ldm.CustomerRegion, [])}
             onApply={updateFilters}
@@ -86,7 +146,7 @@ export default () => {
           />
         </div>
         <div className="filter">
-          <span className="label_filter">Customer State</span> <br></br>
+          <span className="label_filter">Customer State</span>
           <AttributeFilter
             filter={newNegativeAttributeFilter(Ldm.CustomerState, [])}
             onApply={updateFilters}
@@ -94,7 +154,7 @@ export default () => {
           />
         </div>
         <div className="filter">
-          <span className="label_filter">Customer City</span> <br></br>
+          <span className="label_filter">Customer City</span>
           <AttributeFilter
             filter={newNegativeAttributeFilter(Ldm.CustomerCity, [])}
             onApply={updateFilters}
@@ -102,13 +162,13 @@ export default () => {
           />
         </div>
         <div className="filter">
-          <span className="label_filter">Customer Name</span> <br></br>
+          <span className="label_filter">Customer Name</span>
           <AttributeFilter
             filter={newNegativeAttributeFilter(Ldm.CustomerName, [])}
             onApply={updateFilters}
             title="All"
           />
-        </div>
+  </div> */}
         <div className="container2">
           <div className="container21">
             {" "}
