@@ -123,7 +123,7 @@ export default () => {
     };
   };
 
-  /*const getBarChartData = (barresult) => {
+  const getBarChartData = barresult => {
     const colors = {
       cancelled: "rgb(195,255,176)",
       delivered: "rgb(175,232,255)",
@@ -133,58 +133,43 @@ export default () => {
     const { data = [], headerItems = [] } = barresult.dataView || {};
     const [categories = [], statuses = []] = headerItems;
 
-    return (categories[0] || []).map((category, index) => {
-      const name = category?.attributeHeaderItem?.name;
-      return { name, color: colors[name.toLowerCase()], y: parseInt(data[index][0]) };
-    });
+    return {
+      categories: (categories[0] || []).map(c => c?.attributeHeaderItem?.name),
+      data: (statuses[0] || []).map((status, index) => {
+        const name = status?.measureHeaderItem?.name;
+        const statusData = data.map(item => parseInt(item[index]));
+
+        return { name, data: statusData };
+      })
+    };
   };
 
-  const getBarHightChartsConfig = (barresult) => {
-    return ({
+  const getBarHightChartsConfig = barresult => {
+    const barChartData = getBarChartData(barresult);
+
+    return {
       chart: {
-        type: 'bar'
+        type: "bar"
       },
       title: null,
+      xAxis: {
+        categories: barChartData.categories
+      },
+      yAxis: {
+        min: 0,
+        title: null
+      },
       legend: {
         reversed: true
       },
       plotOptions: {
         series: {
-          stacking: 'normal'
+          stacking: "normal"
         }
       },
-      series: [
-        {
-          name: "Versions",
-          showInLegend: true,
-          data: getBarChartData(barresult),
-          size: "80%",
-          dataLabels: {},
-          id: "versions"
-        }
-      ],
-      responsive: {
-        rules: [
-          {
-            condition: {
-              maxWidth: 400
-            },
-            chartOptions: {
-              series: [
-                {},
-                {
-                  id: "versions",
-                  dataLabels: {
-                    enabled: false
-                  }
-                }
-              ]
-            }
-          }
-        ]
-      }
-    })
-  };*/
+      series: barChartData.data
+    };
+  };
 
   return (
     <>
@@ -292,7 +277,7 @@ export default () => {
         </div>
         <div className="clr"></div>
         <div className="block" style={{ height: 300 }}>
-          <InsightView
+          {/* <InsightView
             insight={"abt4T3CjejSr"}
             onDrill={event => {
               const result = event.dataView;
@@ -305,21 +290,26 @@ export default () => {
               )
             ]}
             filters={filters}
-          />
-          {/*<Execute
-            seriesBy={[newMeasure(idRef("ac6tLxDmebO7", "measure")),
-            newMeasure(idRef("acltRLTPbQaV", "measure")),newMeasure(idRef("abLtUXDqbMZN", "measure"))]}
+          /> */}
+          <Execute
+            seriesBy={[
+              newMeasure(idRef("ac6tLxDmebO7", "measure")),
+              newMeasure(idRef("acltRLTPbQaV", "measure")),
+              newMeasure(idRef("abLtUXDqbMZN", "measure"))
+            ]}
             slicesBy={[Ldm.CustomerRegion]}
           >
             {barexecution => {
-              const { isLoading, error, barresult } = barexecution;
-              if (isLoading || !barresult) {
-                return <div>Getting your data... Please wait.</div>
+              const { isLoading, error, result } = barexecution;
+              if (isLoading || !result) {
+                return <div>Getting your data... Please wait.</div>;
               } else {
-                return <GDHighCharts options={getBarHightChartsConfig(barresult)} />
+                return (
+                  <GDHighCharts options={getBarHightChartsConfig(result)} />
+                );
               }
             }}
-          </Execute> */}
+          </Execute>
         </div>
         <div className="block" style={{ height: 300 }}>
           {/* <InsightView
