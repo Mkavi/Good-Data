@@ -14,10 +14,10 @@ import "@gooddata/sdk-ui-geo/styles/css/main.css";
 import "@gooddata/sdk-ui-pivot/styles/css/main.css";
 
 ReactDOM.render(
-    <AppProviders>
-        <App />
-    </AppProviders>,
-    document.getElementById("root"),
+  <AppProviders>
+    <App />
+  </AppProviders>,
+  document.getElementById("root")
 );
 
 // If you want your app to work offline and load faster, you can change

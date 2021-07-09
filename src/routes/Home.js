@@ -1,7 +1,7 @@
 // (C) 2020 GoodData Corporation
 import React, { useState } from "react";
 import { newMeasure, idRef } from "@gooddata/sdk-model";
-import { Kpi } from "@gooddata/sdk-ui";
+import { Execute, Kpi } from "@gooddata/sdk-ui";
 import {
   DateFilter,
   defaultDateFilterOptions,
@@ -13,9 +13,11 @@ import { InsightView } from "@gooddata/sdk-ui-ext";
 import * as Ldm from "../md/full";
 import { HeaderPredicates } from "@gooddata/sdk-ui";
 import ExcelExport from "./ExcelExport";
+import test1 from "./test1";
 import CSVExport from "./CSVExport";
 import "../sai.css";
 import { GDModal } from "../components/Modal";
+import { GDHighCharts } from "../components/Highcharts";
 // import { PieChart } from "@gooddata/sdk-ui-charts/dist/charts/pieChart/PieChart";
 
 export default () => {
@@ -48,6 +50,141 @@ export default () => {
   const barChartClickHanlder = data => {
     setModalData({ show: true, data });
   };
+  const getChartData = result => {
+    const colors = {
+      cancelled: "rgb(195,255,176)",
+      delivered: "rgb(175,232,255)",
+      returned: "rgb(255,143,179)"
+    };
+
+    const { data = [], headerItems = [] } = result.dataView || {};
+    const [categories = [], statuses = []] = headerItems;
+
+    return (categories[0] || []).map((category, index) => {
+      const name = category?.attributeHeaderItem?.name;
+      return {
+        name,
+        color: colors[name.toLowerCase()],
+        y: parseInt(data[index][0])
+      };
+    });
+  };
+
+  const getHightChartsConfig = result => {
+    return {
+      chart: {
+        type: "pie"
+      },
+      title: null,
+      subtitle: null,
+      plotOptions: {
+        pie: {
+          shadow: false,
+          center: ["50%", "50%"]
+        }
+      },
+      tooltip: {
+        valueSuffix: ""
+      },
+      legend: {
+        enabled: true
+      },
+      series: [
+        {
+          name: "Versions",
+          showInLegend: true,
+          data: getChartData(result),
+          size: "80%",
+          innerSize: "60%",
+          dataLabels: {},
+          id: "versions"
+        }
+      ],
+      responsive: {
+        rules: [
+          {
+            condition: {
+              maxWidth: 400
+            },
+            chartOptions: {
+              series: [
+                {},
+                {
+                  id: "versions",
+                  dataLabels: {
+                    enabled: false
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    };
+  };
+
+  /*const getBarChartData = (barresult) => {
+    const colors = {
+      cancelled: "rgb(195,255,176)",
+      delivered: "rgb(175,232,255)",
+      returned: "rgb(255,143,179)"
+    };
+
+    const { data = [], headerItems = [] } = barresult.dataView || {};
+    const [categories = [], statuses = []] = headerItems;
+
+    return (categories[0] || []).map((category, index) => {
+      const name = category?.attributeHeaderItem?.name;
+      return { name, color: colors[name.toLowerCase()], y: parseInt(data[index][0]) };
+    });
+  };
+
+  const getBarHightChartsConfig = (barresult) => {
+    return ({
+      chart: {
+        type: 'bar'
+      },
+      title: null,
+      legend: {
+        reversed: true
+      },
+      plotOptions: {
+        series: {
+          stacking: 'normal'
+        }
+      },
+      series: [
+        {
+          name: "Versions",
+          showInLegend: true,
+          data: getBarChartData(barresult),
+          size: "80%",
+          dataLabels: {},
+          id: "versions"
+        }
+      ],
+      responsive: {
+        rules: [
+          {
+            condition: {
+              maxWidth: 400
+            },
+            chartOptions: {
+              series: [
+                {},
+                {
+                  id: "versions",
+                  dataLabels: {
+                    enabled: false
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  };*/
 
   return (
     <>
@@ -169,13 +306,41 @@ export default () => {
             ]}
             filters={filters}
           />
+          {/*<Execute
+            seriesBy={[newMeasure(idRef("ac6tLxDmebO7", "measure")),
+            newMeasure(idRef("acltRLTPbQaV", "measure")),newMeasure(idRef("abLtUXDqbMZN", "measure"))]}
+            slicesBy={[Ldm.CustomerRegion]}
+          >
+            {barexecution => {
+              const { isLoading, error, barresult } = barexecution;
+              if (isLoading || !barresult) {
+                return <div>Getting your data... Please wait.</div>
+              } else {
+                return <GDHighCharts options={getBarHightChartsConfig(barresult)} />
+              }
+            }}
+          </Execute> */}
         </div>
         <div className="block" style={{ height: 300 }}>
-          <InsightView
+          {/* <InsightView
             insight={"ab94Ssflh6Xk"}
             config={{ legend: { position: "bottom" } }}
             filters={filters}
-          />
+          /> */}
+          <Execute
+            seriesBy={[newMeasure(idRef("abitUNiGeSYG", "measure"))]}
+            slicesBy={[Ldm.OrderStatus]}
+            filters={filters}
+          >
+            {execution => {
+              const { isLoading, error, result } = execution;
+              if (isLoading || !result) {
+                return <div>Getting your data... Please wait.</div>;
+              } else {
+                return <GDHighCharts options={getHightChartsConfig(result)} />;
+              }
+            }}
+          </Execute>
         </div>{" "}
         <br></br>
         <div className="clr"></div>
@@ -191,7 +356,15 @@ export default () => {
           </div>
         </div>
         <div className="clr"></div>
-        <div className="block" style={{ height: 550, width: 1500 }}>
+        <div className="container3">
+          <div className="center">
+            <div className="download-btn btn-1">
+              <div className="top"></div>
+            </div>
+          </div>
+        </div>
+        <div className="clr"></div>
+        <div className="block1" style={{ height: 550 }}>
           <InsightView
             insight={"abG4RMpBhZyp"}
             config={{
@@ -207,9 +380,18 @@ export default () => {
         onClose={() => {
           setModalData({ show: false, data: null });
         }}
-      >
-        <div>Sample, {JSON.stringify(modalData.data)}</div>
-      </GDModal>
+      ></GDModal>
     </>
   );
 };
+//sample
+/* {state.map((item) => (
+        <tr key={item.id}>
+          {Object.values(item).map((val) => (
+            <td>{val}</td>
+          ))}
+        </tr>
+      ))}*/
+
+//<div>Sample, {JSON.stringify(modalData.data)
+//}</div>
