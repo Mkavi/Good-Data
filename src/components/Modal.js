@@ -13,7 +13,9 @@ const useStyles = makeStyles(() => ({
     boxSizing: "border-box",
     padding: "28px",
     borderRadius: "18px",
-    maxHeight: "calc(100vh - 80px)"
+    maxHeight: "calc(100vh - 80px)",
+    minHeight: "300px",
+    height: "150px"
   }
 }));
 

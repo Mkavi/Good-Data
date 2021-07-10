@@ -1,6 +1,10 @@
 // (C) 2020 GoodData Corporation
 import React, { useState } from "react";
-import { newMeasure, idRef } from "@gooddata/sdk-model";
+import {
+  newMeasure,
+  idRef,
+  newPositiveAttributeFilter
+} from "@gooddata/sdk-model";
 import { Execute, Kpi } from "@gooddata/sdk-ui";
 import {
   DateFilter,
@@ -17,7 +21,7 @@ import test1 from "./test1";
 import CSVExport from "./CSVExport";
 import "../sai.css";
 import { GDModal } from "../components/Modal";
-import { GDHighCharts } from "../components/Highcharts";
+import { GDHighCharts } from "../components/HighCharts";
 // import { PieChart } from "@gooddata/sdk-ui-charts/dist/charts/pieChart/PieChart";
 
 export default () => {
@@ -48,8 +52,16 @@ export default () => {
   const [modalData, setModalData] = useState({ show: false, data: null });
 
   const barChartClickHanlder = data => {
-    setModalData({ show: true, data });
+    setModalData({
+      show: true,
+      data: {
+        category: data.category,
+        value: data.y,
+        status: data.series?.name
+      }
+    });
   };
+
   const getChartData = result => {
     const colors = {
       cancelled: "rgb(195,255,176)",
@@ -164,7 +176,15 @@ export default () => {
       },
       plotOptions: {
         series: {
-          stacking: "normal"
+          stacking: "normal",
+          cursor: "pointer",
+          point: {
+            events: {
+              click: function() {
+                barChartClickHanlder(this);
+              }
+            }
+          }
         }
       },
       series: barChartData.data
@@ -370,7 +390,22 @@ export default () => {
         onClose={() => {
           setModalData({ show: false, data: null });
         }}
-      ></GDModal>
+      >
+        <InsightView
+          insight={"abG4RMpBhZyp"}
+          config={{
+            enableCompactSize: true
+          }}
+          filters={[
+            newPositiveAttributeFilter(Ldm.CustomerRegion, [
+              modalData.data?.category
+            ]),
+            newPositiveAttributeFilter(Ldm.OrderStatus, [
+              modalData.data?.status
+            ])
+          ]}
+        />
+      </GDModal>
     </>
   );
 };
