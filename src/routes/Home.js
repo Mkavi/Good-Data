@@ -88,7 +88,7 @@ export default () => {
     return {
       chart: {
         type: "pie",
-        height: 400
+        height: 325
       },
       title: null,
       credits: {
@@ -111,7 +111,10 @@ export default () => {
         valueSuffix: ""
       },
       legend: {
-        enabled: true
+        enabled: true,
+        symbolHeight: 12,
+        symbolWidth: 12,
+        symbolRadius: 0
       },
       series: [
         {
@@ -119,7 +122,7 @@ export default () => {
           showInLegend: true,
           data: getChartData(result),
           size: "80%",
-          innerSize: "60%",
+          innerSize: "50%",
           dataLabels: {},
           id: "versions"
         }
@@ -188,7 +191,10 @@ export default () => {
         title: null
       },
       legend: {
-        reversed: true
+        reversed: true,
+        symbolHeight: 12,
+        symbolWidth: 12,
+        symbolRadius: 0
       },
       plotOptions: {
         series: {
@@ -277,7 +283,7 @@ export default () => {
             />
           </div>
         ))}
-        {/*        <div className="filter">
+        <div className="filter">
           <span className="label_filter">Product Category</span>
           <AttributeFilter
             filter={newNegativeAttributeFilter(Ldm.ProductCategory, [])}
@@ -324,7 +330,7 @@ export default () => {
             onApply={updateFilters}
             title="All"
           />
-  </div> */}
+        </div>
         <div className="container2">
           <div className="container21">
             {" "}
