@@ -3,54 +3,23 @@ import React, { useState } from "react";
 import {
   newMeasure,
   idRef,
-  newPositiveAttributeFilter
+  newPositiveAttributeFilter,
+  attributeDisplayFormRef
 } from "@gooddata/sdk-model";
-import { Execute, Kpi } from "@gooddata/sdk-ui";
-import {
-  DateFilter,
-  defaultDateFilterOptions,
-  DateFilterHelpers,
-  AttributeFilter
-} from "@gooddata/sdk-ui-filters";
-import { newNegativeAttributeFilter } from "@gooddata/sdk-model";
+import { Execute, Kpi, ErrorComponent } from "@gooddata/sdk-ui";
+import { AttributeFilter } from "@gooddata/sdk-ui-filters";
+import { newNegativeAttributeFilter, filterIsEmpty } from "@gooddata/sdk-model";
 import { InsightView } from "@gooddata/sdk-ui-ext";
 import * as Ldm from "../md/full";
-import { HeaderPredicates } from "@gooddata/sdk-ui";
 import ExcelExport from "./ExcelExport";
-import test1 from "./test1";
-import CSVExport from "./CSVExport";
 import "../sai.css";
 import { GDModal } from "../components/Modal";
-import { GDHighCharts } from "../components/HighCharts";
-// import { PieChart } from "@gooddata/sdk-ui-charts/dist/charts/pieChart/PieChart";
+import { GDHighCharts } from "../components/Highcharts";
+import { isPositiveAttributeFilter } from "@gooddata/sdk-model";
+import { isAttributeElementsByRef } from "@gooddata/sdk-model";
+import { attributeIdentifier } from "@gooddata/sdk-model";
 
 export default () => {
-  // Try changing the default filter 👇
-  const [filters, setFilters] = useState([]);
-
-  const updateFilters = filter => {
-    const filterDisplayName =
-      (filter.negativeAttributeFilter || filter.positiveAttributeFilter || {})
-        .displayForm?.identifier || "";
-    const prevFilters = [...filters];
-
-    const filterIndex = prevFilters.findIndex(fltr => {
-      const filterName =
-        (fltr.negativeAttributeFilter || fltr.positiveAttributeFilter || {})
-          .displayForm?.identifier || "";
-      return filterDisplayName === filterName;
-    });
-
-    if (filterIndex < 0) {
-      setFilters([...prevFilters, filter]);
-    } else {
-      prevFilters[filterIndex] = filter;
-      setFilters(prevFilters);
-    }
-  };
-
-  console.log(filters);
-
   const [modalData, setModalData] = useState({ show: false, data: null });
 
   const barChartClickHanlder = data => {
@@ -213,97 +182,151 @@ export default () => {
     };
   };
 
-  const ldmFilters = [
-    {
-      name: "Order Status",
-      attr: Ldm.OrderStatus
-    },
-    {
-      name: "Product Category",
-      attr: Ldm.ProductCategory
-    },
-    {
-      name: "Product Name",
-      attr: Ldm.ProductName
-    },
-    {
-      name: "Customer Region",
-      attr: Ldm.CustomerRegion
-    },
-    {
-      name: "Customer State",
-      attr: Ldm.CustomerState
-    },
-    {
-      name: "Customer City",
-      attr: Ldm.CustomerCity
-    },
-    {
-      name: "Customer Name",
-      attr: Ldm.CustomerName
-    }
-  ];
-
-  const getFilterText = attr => {
-    const identifier = attr.attribute?.displayForm?.identifier;
-
-    const identified = filters.find(fltr => {
-      const filterName =
-        (fltr.negativeAttributeFilter || fltr.positiveAttributeFilter || {})
-          .displayForm?.identifier || "";
-      return identifier === filterName;
-    });
-
-    if (identified) {
-      const filterVlaue =
-        identified.negativeAttributeFilter ||
-        identified.positiveAttributeFilter ||
-        {};
-      if (filterVlaue.notIn?.values?.length || filterVlaue.in?.values?.length) {
-        return "Custom";
-      } else {
-        return "All";
-      }
+  const filterPositiveAttribute = (filter, setState) => {
+    let filters;
+    const {
+      positiveAttributeFilter,
+      positiveAttributeFilter: { displayForm }
+    } = filter;
+    const inElements = filter.positiveAttributeFilter.in;
+    const checkLengthOfFilter = isAttributeElementsByRef(
+      positiveAttributeFilter.in
+    )
+      ? positiveAttributeFilter.in.uris.length !== 0
+      : positiveAttributeFilter.in.values.length !== 0;
+    if (checkLengthOfFilter) {
+      filters = [
+        {
+          positiveAttributeFilter: {
+            displayForm,
+            in: inElements
+          }
+        }
+      ];
     } else {
-      return "All";
+      setFilterError("The filter must have at least one item selected");
+    }
+
+    setState({ filters });
+  };
+
+  const filterNegativeAttribute = (filter, setState) => {
+    let filters;
+    const {
+      negativeAttributeFilter: { notIn, displayForm }
+    } = filter;
+
+    const checkLengthOfFilter = isAttributeElementsByRef(notIn)
+      ? notIn.uris.length !== 0
+      : notIn.values.length !== 0;
+    if (checkLengthOfFilter) {
+      filters = [
+        {
+          negativeAttributeFilter: {
+            displayForm,
+            notIn
+          }
+        }
+      ];
+    }
+    setState({ filters });
+  };
+
+  const updateFilters = (filter, setState) => {
+    setState([]);
+    setFilterError(undefined);
+    console.log(filter);
+
+    if (isPositiveAttributeFilter(filter)) {
+      filterPositiveAttribute(filter, setState);
+    } else {
+      filterNegativeAttribute(filter, setState);
     }
   };
+
+  const [orderStatusFilter, setOrderStatusFilter] = useState(
+    newNegativeAttributeFilter(attributeDisplayFormRef(Ldm.OrderStatus), [])
+  );
+  const [filterError, setFilterError] = useState(undefined);
+  const [productCategoryFilter, setProductCategoryFilter] = useState(
+    newNegativeAttributeFilter(Ldm.ProductCategory, [])
+  );
+  const [productNameFilter, setProductNameFilter] = useState({});
+  const [customerRegionFilter, setCustomerRegionFilter] = useState({});
+  const [customerStateFilter, setCustomerStateFilter] = useState({});
+  const [customerCityFilter, setCustomerCityFilter] = useState({});
+  const [customerNameFilter, setCustomerNameFilter] = useState({});
+
+  // const getFilterText = attr => {
+  //   const identifier = attr.attribute?.displayForm?.identifier;
+
+  //   const identified = filters.find(fltr => {
+  //     const filterName =
+  //       (fltr.negativeAttributeFilter || fltr.positiveAttributeFilter || {})
+  //         .displayForm?.identifier || "";
+  //     return identifier === filterName;
+  //   });
+
+  //   if (identified) {
+  //     const filterVlaue =
+  //       identified.negativeAttributeFilter ||
+  //       identified.positiveAttributeFilter ||
+  //       {};
+  //     if (filterVlaue.notIn?.values?.length || filterVlaue.in?.values?.length) {
+  //       return "Custom";
+  //     } else {
+  //       return "All";
+  //     }
+  //   } else {
+  //     return "All";
+  //   }
+  // };
+
+  const getFilters = filters => filters.filter(f => f);
 
   return (
     <>
       <h3>Orders</h3>
       <div className="container1">
-        {ldmFilters.map(f => (
-          <div className="filter" key={f.name}>
-            <span className="label_filter">{f.name}</span>
-            <AttributeFilter
-              filter={newNegativeAttributeFilter(f.attr, [])}
-              onApply={updateFilters}
-              title={getFilterText(f.attr)}
-            />
-          </div>
-        ))}
+        <div className="filter">
+          <span className="label_filter">Order Status</span>
+          <AttributeFilter
+            identifier={attributeIdentifier(Ldm.OrderStatus)}
+            onApply={filter => {
+              updateFilters(filter, setOrderStatusFilter);
+            }}
+          />
+        </div>
         <div className="filter">
           <span className="label_filter">Product Category</span>
           <AttributeFilter
-            filter={newNegativeAttributeFilter(Ldm.ProductCategory, [])}
-            onApply={updateFilters}
-            title="All"
+            identifier={attributeIdentifier(Ldm.ProductCategory)}
+            parentFilters={getFilters([orderStatusFilter])}
+            onApply={filter => {
+              updateFilters(filter, setProductCategoryFilter);
+            }}
           />
         </div>
         <div className="filter">
           <span className="label_filter">Product Name</span>
           <AttributeFilter
-            filter={newNegativeAttributeFilter(Ldm.ProductName, [])}
-            onApply={updateFilters}
-            title="All"
+            // filter={newNegativeAttributeFilter(Ldm.ProductName, [])}
+            identifier={attributeIdentifier(Ldm.ProductName)}
+            parentFilters={getFilters([
+              orderStatusFilter,
+              productCategoryFilter
+            ])}
+            onApply={filter => {
+              updateFilters(filter, setProductNameFilter);
+            }}
+            // title="All"
           />
         </div>
         <div className="filter">
           <span className="label_filter">Customer Region</span>
           <AttributeFilter
             filter={newNegativeAttributeFilter(Ldm.CustomerRegion, [])}
-            onApply={updateFilters}
+            onApply={setCustomerRegionFilter}
             title="All"
           />
         </div>
@@ -311,7 +334,7 @@ export default () => {
           <span className="label_filter">Customer State</span>
           <AttributeFilter
             filter={newNegativeAttributeFilter(Ldm.CustomerState, [])}
-            onApply={updateFilters}
+            onApply={setCustomerStateFilter}
             title="All"
           />
         </div>
@@ -319,7 +342,7 @@ export default () => {
           <span className="label_filter">Customer City</span>
           <AttributeFilter
             filter={newNegativeAttributeFilter(Ldm.CustomerCity, [])}
-            onApply={updateFilters}
+            onApply={setCustomerCityFilter}
             title="All"
           />
         </div>
@@ -327,7 +350,7 @@ export default () => {
           <span className="label_filter">Customer Name</span>
           <AttributeFilter
             filter={newNegativeAttributeFilter(Ldm.CustomerName, [])}
-            onApply={updateFilters}
+            onApply={setCustomerNameFilter}
             title="All"
           />
         </div>
@@ -391,46 +414,51 @@ export default () => {
             ]}
             filters={filters}
           /> */}
-          <Execute
-            seriesBy={[
-              newMeasure(idRef("ac6tLxDmebO7", "measure")),
-              newMeasure(idRef("acltRLTPbQaV", "measure")),
-              newMeasure(idRef("abLtUXDqbMZN", "measure"))
-            ]}
-            slicesBy={[Ldm.CustomerRegion]}
-          >
-            {barexecution => {
-              const { isLoading, error, result } = barexecution;
-              if (isLoading || !result) {
-                return <div>Getting your data... Please wait.</div>;
-              } else {
-                return (
-                  <GDHighCharts options={getBarHightChartsConfig(result)} />
-                );
-              }
-            }}
-          </Execute>
+          {filterError ? (
+            <ErrorComponent message={filterError} />
+          ) : (
+            <Execute
+              seriesBy={[
+                newMeasure(idRef("ac6tLxDmebO7", "measure")),
+                newMeasure(idRef("acltRLTPbQaV", "measure")),
+                newMeasure(idRef("abLtUXDqbMZN", "measure"))
+              ]}
+              slicesBy={[Ldm.CustomerRegion]}
+            >
+              {barexecution => {
+                const { isLoading, result } = barexecution;
+                if (isLoading || !result) {
+                  return <div>Getting your data... Please wait.</div>;
+                } else {
+                  return (
+                    <GDHighCharts options={getBarHightChartsConfig(result)} />
+                  );
+                }
+              }}
+            </Execute>
+          )}
         </div>
         <div className="block" style={{ height: 300 }}>
-          {/* <InsightView
-            insight={"ab94Ssflh6Xk"}
-            config={{ legend: { position: "bottom" } }}
-            filters={filters}
-          /> */}
-          <Execute
-            seriesBy={[newMeasure(idRef("abitUNiGeSYG", "measure"))]}
-            slicesBy={[Ldm.OrderStatus]}
-            filters={filters}
-          >
-            {execution => {
-              const { isLoading, error, result } = execution;
-              if (isLoading || !result) {
-                return <div>Getting your data... Please wait.</div>;
-              } else {
-                return <GDHighCharts options={getHightChartsConfig(result)} />;
-              }
-            }}
-          </Execute>
+          {filterError ? (
+            <ErrorComponent message={filterError} />
+          ) : (
+            <Execute
+              seriesBy={[newMeasure(idRef("abitUNiGeSYG", "measure"))]}
+              slicesBy={[Ldm.OrderStatus]}
+              // filters={filters}
+            >
+              {execution => {
+                const { isLoading, result } = execution;
+                if (isLoading || !result) {
+                  return <div>Getting your data... Please wait.</div>;
+                } else {
+                  return (
+                    <GDHighCharts options={getHightChartsConfig(result)} />
+                  );
+                }
+              }}
+            </Execute>
+          )}
         </div>{" "}
         <br></br>
         <div className="clr"></div>
@@ -460,7 +488,7 @@ export default () => {
             config={{
               enableCompactSize: true
             }}
-            filters={filters}
+            // filters={filters}
           />
         </div>
       </div>
@@ -489,14 +517,3 @@ export default () => {
     </>
   );
 };
-//sample
-/* {state.map((item) => (
-        <tr key={item.id}>
-          {Object.values(item).map((val) => (
-            <td>{val}</td>
-          ))}
-        </tr>
-      ))}*/
-
-//<div>Sample, {JSON.stringify(modalData.data)
-//}</div>
