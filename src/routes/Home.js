@@ -4,7 +4,8 @@ import {
   newMeasure,
   idRef,
   newPositiveAttributeFilter,
-  attributeDisplayFormRef
+  attributeDisplayFormRef,
+  isNegativeAttributeFilter
 } from "@gooddata/sdk-model";
 import { Execute, Kpi, ErrorComponent } from "@gooddata/sdk-ui";
 import { AttributeFilter } from "@gooddata/sdk-ui-filters";
@@ -182,8 +183,7 @@ export default () => {
     };
   };
 
-  const filterPositiveAttribute = (filter, setState) => {
-    let filters;
+  const filterPositiveAttribute = (filter, filterName) => {
     const {
       positiveAttributeFilter,
       positiveAttributeFilter: { displayForm }
@@ -194,8 +194,14 @@ export default () => {
     )
       ? positiveAttributeFilter.in.uris.length !== 0
       : positiveAttributeFilter.in.values.length !== 0;
-    if (checkLengthOfFilter) {
-      filters = [
+    if (!checkLengthOfFilter) {
+      setFilterError({
+        message: "The filter must have at least one item selected",
+        causedFilter: filterName
+      });
+      return [];
+    } else {
+      return [
         {
           positiveAttributeFilter: {
             displayForm,
@@ -203,15 +209,10 @@ export default () => {
           }
         }
       ];
-    } else {
-      setFilterError("The filter must have at least one item selected");
     }
-
-    setState({ filters });
   };
 
-  const filterNegativeAttribute = (filter, setState) => {
-    let filters;
+  const filterNegativeAttribute = filter => {
     const {
       negativeAttributeFilter: { notIn, displayForm }
     } = filter;
@@ -219,70 +220,78 @@ export default () => {
     const checkLengthOfFilter = isAttributeElementsByRef(notIn)
       ? notIn.uris.length !== 0
       : notIn.values.length !== 0;
-    if (checkLengthOfFilter) {
-      filters = [
-        {
-          negativeAttributeFilter: {
-            displayForm,
-            notIn
+    return checkLengthOfFilter
+      ? [
+          {
+            negativeAttributeFilter: {
+              displayForm,
+              notIn
+            }
           }
-        }
-      ];
-    }
-    setState({ filters });
+        ]
+      : [];
   };
 
-  const updateFilters = (filter, setState) => {
+  const updateFilters = (filter, setState, filterName) => {
     setState([]);
-    setFilterError(undefined);
-    console.log(filter);
+    setFilterError({
+      message: undefined,
+      causedFilter: undefined
+    });
 
+    let filters = [];
     if (isPositiveAttributeFilter(filter)) {
-      filterPositiveAttribute(filter, setState);
+      filters = filterPositiveAttribute(filter, filterName);
     } else {
-      filterNegativeAttribute(filter, setState);
+      filters = filterNegativeAttribute(filter);
     }
+
+    setState({ filters });
+
+    setFiltersLabels(prevState => ({
+      ...prevState,
+      [filterName]: !filterIsEmpty(filter) ? "Custom" : "All"
+    }));
   };
 
-  const [orderStatusFilter, setOrderStatusFilter] = useState(
-    newNegativeAttributeFilter(attributeDisplayFormRef(Ldm.OrderStatus), [])
-  );
-  const [filterError, setFilterError] = useState(undefined);
-  const [productCategoryFilter, setProductCategoryFilter] = useState(
-    newNegativeAttributeFilter(Ldm.ProductCategory, [])
-  );
+  const [filterError, setFilterError] = useState({
+    message: undefined,
+    causedFilter: undefined
+  });
+
+  const [orderStatusFilter, setOrderStatusFilter] = useState({});
+  const [productCategoryFilter, setProductCategoryFilter] = useState({});
   const [productNameFilter, setProductNameFilter] = useState({});
   const [customerRegionFilter, setCustomerRegionFilter] = useState({});
   const [customerStateFilter, setCustomerStateFilter] = useState({});
   const [customerCityFilter, setCustomerCityFilter] = useState({});
   const [customerNameFilter, setCustomerNameFilter] = useState({});
 
-  // const getFilterText = attr => {
-  //   const identifier = attr.attribute?.displayForm?.identifier;
+  const [filtersLabels, setFiltersLabels] = useState({
+    orderStatus: "All",
+    productCategory: "All",
+    productName: "All",
+    customerRegion: "All",
+    customerState: "All",
+    customerCity: "All",
+    customerName: "All"
+  });
 
-  //   const identified = filters.find(fltr => {
-  //     const filterName =
-  //       (fltr.negativeAttributeFilter || fltr.positiveAttributeFilter || {})
-  //         .displayForm?.identifier || "";
-  //     return identifier === filterName;
-  //   });
+  const getFilters = filters =>
+    filters.reduce((acc, current = {}) => {
+      const attrFilters = current.filters || [];
+      let applicableFilters = [];
 
-  //   if (identified) {
-  //     const filterVlaue =
-  //       identified.negativeAttributeFilter ||
-  //       identified.positiveAttributeFilter ||
-  //       {};
-  //     if (filterVlaue.notIn?.values?.length || filterVlaue.in?.values?.length) {
-  //       return "Custom";
-  //     } else {
-  //       return "All";
-  //     }
-  //   } else {
-  //     return "All";
-  //   }
-  // };
+      attrFilters.forEach(f => {
+        if (isPositiveAttributeFilter(f) || isNegativeAttributeFilter(f)) {
+          if (!filterIsEmpty(f)) {
+            applicableFilters.push(f);
+          }
+        }
+      });
 
-  const getFilters = filters => filters.filter(f => f);
+      return acc.concat(applicableFilters);
+    }, []);
 
   return (
     <>
@@ -293,65 +302,105 @@ export default () => {
           <AttributeFilter
             identifier={attributeIdentifier(Ldm.OrderStatus)}
             onApply={filter => {
-              updateFilters(filter, setOrderStatusFilter);
+              updateFilters(filter, setOrderStatusFilter, "orderStatus");
             }}
+            title={
+              filterError.causedFilter === "orderStatus" && filterError.message
+                ? "None"
+                : filtersLabels.orderStatus
+            }
           />
         </div>
         <div className="filter">
           <span className="label_filter">Product Category</span>
           <AttributeFilter
             identifier={attributeIdentifier(Ldm.ProductCategory)}
-            parentFilters={getFilters([orderStatusFilter])}
+            // parentFilters={getFilters([orderStatusFilter])}
             onApply={filter => {
-              updateFilters(filter, setProductCategoryFilter);
+              updateFilters(
+                filter,
+                setProductCategoryFilter,
+                "productCategory"
+              );
             }}
+            title={
+              filterError.causedFilter === "productCategory" &&
+              filterError.message
+                ? "None"
+                : filtersLabels.productCategory
+            }
           />
         </div>
         <div className="filter">
           <span className="label_filter">Product Name</span>
           <AttributeFilter
-            // filter={newNegativeAttributeFilter(Ldm.ProductName, [])}
             identifier={attributeIdentifier(Ldm.ProductName)}
-            parentFilters={getFilters([
-              orderStatusFilter,
-              productCategoryFilter
-            ])}
             onApply={filter => {
-              updateFilters(filter, setProductNameFilter);
+              updateFilters(filter, setProductNameFilter, "productName");
             }}
-            // title="All"
+            title={
+              filterError.causedFilter === "productName" && filterError.message
+                ? "None"
+                : filtersLabels.productName
+            }
           />
         </div>
         <div className="filter">
           <span className="label_filter">Customer Region</span>
           <AttributeFilter
-            filter={newNegativeAttributeFilter(Ldm.CustomerRegion, [])}
-            onApply={setCustomerRegionFilter}
-            title="All"
+            identifier={attributeIdentifier(Ldm.CustomerRegion)}
+            onApply={filter => {
+              updateFilters(filter, setCustomerRegionFilter, "customerRegion");
+            }}
+            title={
+              filterError.causedFilter === "customerRegion" &&
+              filterError.message
+                ? "None"
+                : filtersLabels.customerRegion
+            }
           />
         </div>
         <div className="filter">
           <span className="label_filter">Customer State</span>
           <AttributeFilter
-            filter={newNegativeAttributeFilter(Ldm.CustomerState, [])}
-            onApply={setCustomerStateFilter}
-            title="All"
+            identifier={attributeIdentifier(Ldm.CustomerState)}
+            onApply={filter => {
+              updateFilters(filter, setCustomerStateFilter, "customerState");
+            }}
+            title={
+              filterError.causedFilter === "customerState" &&
+              filterError.message
+                ? "None"
+                : filtersLabels.customerState
+            }
           />
         </div>
         <div className="filter">
           <span className="label_filter">Customer City</span>
           <AttributeFilter
-            filter={newNegativeAttributeFilter(Ldm.CustomerCity, [])}
-            onApply={setCustomerCityFilter}
-            title="All"
+            identifier={attributeIdentifier(Ldm.CustomerCity)}
+            onApply={filter => {
+              updateFilters(filter, setCustomerCityFilter, "customerCity");
+            }}
+            title={
+              filterError.causedFilter === "customerCity" && filterError.message
+                ? "None"
+                : filtersLabels.customerCity
+            }
           />
         </div>
         <div className="filter">
           <span className="label_filter">Customer Name</span>
           <AttributeFilter
-            filter={newNegativeAttributeFilter(Ldm.CustomerName, [])}
-            onApply={setCustomerNameFilter}
-            title="All"
+            identifier={attributeIdentifier(Ldm.CustomerName)}
+            onApply={filter => {
+              updateFilters(filter, setCustomerNameFilter, "customerName");
+            }}
+            title={
+              filterError.causedFilter === "customerName" && filterError.message
+                ? "None"
+                : filtersLabels.customerName
+            }
           />
         </div>
         <div className="container2">
@@ -400,22 +449,8 @@ export default () => {
         </div>
         <div className="clr"></div>
         <div className="block" style={{ height: 300 }}>
-          {/* <InsightView
-            insight={"abt4T3CjejSr"}
-            onDrill={event => {
-              const result = event.dataView;
-              barChartClickHanlder(event.drillContext?.intersection || []);
-            }}
-            drillableItems={[
-              HeaderPredicates.identifierMatch("label.products.product_name"),
-              HeaderPredicates.uriMatch(
-                "/gdc/md/fn2ibwpivc9gallza3siyn3vk8fbl4oq/obj/782"
-              )
-            ]}
-            filters={filters}
-          /> */}
-          {filterError ? (
-            <ErrorComponent message={filterError} />
+          {filterError.message ? (
+            <ErrorComponent message={filterError.message} />
           ) : (
             <Execute
               seriesBy={[
@@ -424,6 +459,15 @@ export default () => {
                 newMeasure(idRef("abLtUXDqbMZN", "measure"))
               ]}
               slicesBy={[Ldm.CustomerRegion]}
+              filters={getFilters([
+                orderStatusFilter,
+                productCategoryFilter,
+                productNameFilter,
+                customerRegionFilter,
+                customerStateFilter,
+                customerCityFilter,
+                customerNameFilter
+              ])}
             >
               {barexecution => {
                 const { isLoading, result } = barexecution;
@@ -439,13 +483,21 @@ export default () => {
           )}
         </div>
         <div className="block" style={{ height: 300 }}>
-          {filterError ? (
-            <ErrorComponent message={filterError} />
+          {filterError.message ? (
+            <ErrorComponent message={filterError.message} />
           ) : (
             <Execute
               seriesBy={[newMeasure(idRef("abitUNiGeSYG", "measure"))]}
               slicesBy={[Ldm.OrderStatus]}
-              // filters={filters}
+              filters={getFilters([
+                orderStatusFilter,
+                productCategoryFilter,
+                productNameFilter,
+                customerRegionFilter,
+                customerStateFilter,
+                customerCityFilter,
+                customerNameFilter
+              ])}
             >
               {execution => {
                 const { isLoading, result } = execution;
