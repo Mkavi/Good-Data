@@ -4,21 +4,23 @@ import {
   newMeasure,
   idRef,
   newPositiveAttributeFilter,
-  attributeDisplayFormRef,
   isNegativeAttributeFilter
 } from "@gooddata/sdk-model";
 import { Execute, Kpi, ErrorComponent } from "@gooddata/sdk-ui";
 import { AttributeFilter } from "@gooddata/sdk-ui-filters";
-import { newNegativeAttributeFilter, filterIsEmpty } from "@gooddata/sdk-model";
+import {
+  filterIsEmpty,
+  isPositiveAttributeFilter,
+  isAttributeElementsByRef,
+  attributeIdentifier,
+  newNegativeAttributeFilter
+} from "@gooddata/sdk-model";
 import { InsightView } from "@gooddata/sdk-ui-ext";
 import * as Ldm from "../md/full";
 import ExcelExport from "./ExcelExport";
 import "../sai.css";
 import { GDModal } from "../components/Modal";
 import { GDHighCharts } from "../components/Highcharts";
-import { isPositiveAttributeFilter } from "@gooddata/sdk-model";
-import { isAttributeElementsByRef } from "@gooddata/sdk-model";
-import { attributeIdentifier } from "@gooddata/sdk-model";
 
 export default () => {
   const [modalData, setModalData] = useState({ show: false, data: null });
@@ -300,7 +302,8 @@ export default () => {
         <div className="filter">
           <span className="label_filter">Order Status</span>
           <AttributeFilter
-            identifier={attributeIdentifier(Ldm.OrderStatus)}
+            // identifier={attributeIdentifier(Ldm.OrderStatus)}
+            filter={newNegativeAttributeFilter(Ldm.OrderStatus, [])}
             onApply={filter => {
               updateFilters(filter, setOrderStatusFilter, "orderStatus");
             }}
@@ -314,8 +317,9 @@ export default () => {
         <div className="filter">
           <span className="label_filter">Product Category</span>
           <AttributeFilter
-            identifier={attributeIdentifier(Ldm.ProductCategory)}
-            // parentFilters={getFilters([orderStatusFilter])}
+            // identifier={attributeIdentifier(Ldm.ProductCategory)}
+            filter={newNegativeAttributeFilter(Ldm.ProductCategory, [])}
+            parentFilters={getFilters([orderStatusFilter])}
             onApply={filter => {
               updateFilters(
                 filter,
@@ -334,7 +338,10 @@ export default () => {
         <div className="filter">
           <span className="label_filter">Product Name</span>
           <AttributeFilter
-            identifier={attributeIdentifier(Ldm.ProductName)}
+            // identifier={attributeIdentifier(Ldm.ProductName)}
+            filter={newNegativeAttributeFilter(Ldm.ProductName, [])}
+            parentFilters={getFilters([productCategoryFilter])}
+            // parentFilterOverAttribute={idRef("attr.products.product_category")}
             onApply={filter => {
               updateFilters(filter, setProductNameFilter, "productName");
             }}
@@ -348,7 +355,7 @@ export default () => {
         <div className="filter">
           <span className="label_filter">Customer Region</span>
           <AttributeFilter
-            identifier={attributeIdentifier(Ldm.CustomerRegion)}
+            filter={newNegativeAttributeFilter(Ldm.CustomerRegion, [])}
             onApply={filter => {
               updateFilters(filter, setCustomerRegionFilter, "customerRegion");
             }}
@@ -363,7 +370,8 @@ export default () => {
         <div className="filter">
           <span className="label_filter">Customer State</span>
           <AttributeFilter
-            identifier={attributeIdentifier(Ldm.CustomerState)}
+            filter={newNegativeAttributeFilter(Ldm.CustomerState, [])}
+            parentFilters={getFilters([customerRegionFilter])}
             onApply={filter => {
               updateFilters(filter, setCustomerStateFilter, "customerState");
             }}
@@ -378,7 +386,8 @@ export default () => {
         <div className="filter">
           <span className="label_filter">Customer City</span>
           <AttributeFilter
-            identifier={attributeIdentifier(Ldm.CustomerCity)}
+            // identifier={attributeIdentifier(Ldm.CustomerCity)}
+            filter={newNegativeAttributeFilter(Ldm.CustomerCity, [])}
             onApply={filter => {
               updateFilters(filter, setCustomerCityFilter, "customerCity");
             }}
@@ -392,7 +401,8 @@ export default () => {
         <div className="filter">
           <span className="label_filter">Customer Name</span>
           <AttributeFilter
-            identifier={attributeIdentifier(Ldm.CustomerName)}
+            // identifier={attributeIdentifier(Ldm.CustomerName)}
+            filter={newNegativeAttributeFilter(Ldm.CustomerName, [])}
             onApply={filter => {
               updateFilters(filter, setCustomerNameFilter, "customerName");
             }}
