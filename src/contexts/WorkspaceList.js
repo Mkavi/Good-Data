@@ -9,73 +9,88 @@ import { useBackend, useAuth } from "./Auth";
 import { AuthStatus } from "./Auth/state";
 
 const WorkspaceListContext = createContext({
-    ...defaultSourceState,
+  ...defaultSourceState
 });
 
 const filterWorkspaces = (workspaces, filter) => {
-    if (filter) {
-        return workspaces.filter((workspace) => workspace.title.match(filter));
-    }
-    return workspaces;
+  if (filter) {
+    return workspaces.filter(workspace => workspace.title.match(filter));
+  }
+  return workspaces;
 };
 
-const getFirstWorkspace = (workspaces) => {
-    if (workspaces.length) {
-        return last(workspaces[0].id.split("/"));
-    }
-    return undefined;
+const getFirstWorkspace = workspaces => {
+  if (workspaces.length) {
+    return last(workspaces[0].id.split("/"));
+  }
+  return undefined;
 };
 
 export const WorkspaceListProvider = ({ children }) => {
-    const { authStatus } = useAuth();
-    const backend = useBackend();
-    const [workspaceListState, setWorkspaceListState] = useState({
-        ...defaultSourceState,
-    });
+  const { authStatus } = useAuth();
+  const backend = useBackend();
+  const [workspaceListState, setWorkspaceListState] = useState({
+    ...defaultSourceState
+  });
 
-    const [firstWorkspace, setFirstWorkspace] = useState(undefined);
+  const [firstWorkspace, setFirstWorkspace] = useState(undefined);
 
-    useEffect(() => {
-        const getWorkspaces = async () => {
-            setWorkspaceListState({ isLoading: true });
+  useEffect(() => {
+    const getWorkspaces = async () => {
+      setWorkspaceListState({ ...workspaceListState, isLoading: true });
 
-            try {
-                const workspaces = [];
-                let page = await backend.workspaces().forCurrentUser().query();
+      try {
+        const workspaces = [];
+        let pageQueryResult = await backend
+          .workspaces()
+          .forCurrentUser()
+          .query();
 
-                while (!isEmpty(page.items)) {
-                    const allDescriptors = await Promise.all(
-                        page.items.map((workspace) => workspace.getDescriptor()),
-                    );
+        let pageItems = pageQueryResult.items;
+        while (!isEmpty(pageItems)) {
+          const allDescriptors = await Promise.all(
+            pageItems.map(workspace => workspace.getDescriptor())
+          );
 
-                    workspaces.push(...allDescriptors);
-                    page = await page.next();
-                }
-
-                const filteredWorkspaces = filterWorkspaces(workspaces, workspaceFilter);
-                setWorkspaceListState({
-                    isLoading: false,
-                    data: filteredWorkspaces,
-                });
-
-                setFirstWorkspace(getFirstWorkspace(filteredWorkspaces));
-            } catch (error) {
-                setWorkspaceListState({ isLoading: false, error });
-            }
-        };
-
-        setWorkspaceListState({ isLoading: false });
-
-        if (authStatus === AuthStatus.AUTHORIZED) {
-            getWorkspaces().catch(console.error);
+          workspaces.push(...allDescriptors);
+          pageItems = (await pageQueryResult.next()).items;
         }
-    }, [authStatus, backend]);
 
-    return (
-        <WorkspaceListContext.Provider value={{ ...workspaceListState, firstWorkspace }}>
-            {children}
-        </WorkspaceListContext.Provider>
-    );
+        const filteredWorkspaces = filterWorkspaces(
+          workspaces,
+          workspaceFilter
+        );
+        setWorkspaceListState({
+          ...workspaceListState,
+          isLoading: false,
+          data: filteredWorkspaces
+        });
+
+        setFirstWorkspace(getFirstWorkspace(filteredWorkspaces));
+      } catch (error) {
+        setWorkspaceListState({
+          ...workspaceListState,
+          isLoading: false,
+          error
+        });
+      }
+    };
+
+    setWorkspaceListState({ ...workspaceListState, isLoading: false });
+
+    if (authStatus === AuthStatus.AUTHORIZED) {
+      getWorkspaces().catch(console.error);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authStatus, backend]);
+
+  return (
+    <WorkspaceListContext.Provider
+      value={{ ...workspaceListState, firstWorkspace }}
+    >
+      {children}
+    </WorkspaceListContext.Provider>
+  );
 };
 
 export const useWorkspaceList = () => useContext(WorkspaceListContext);
