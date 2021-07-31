@@ -2,11 +2,11 @@ import "react-app-polyfill/stable";
 import React from "react";
 import ReactDOM from "react-dom";
 
-import App from "./App";
+import App from "./app/App";
 import * as serviceWorker from "./serviceWorker";
 import { AppProviders } from "./contexts";
 
-import "./index.scss";
+import "./scss/index.scss";
 import "@gooddata/sdk-ui-charts/styles/css/main.css";
 import "@gooddata/sdk-ui-ext/styles/css/main.css";
 import "@gooddata/sdk-ui-filters/styles/css/main.css";

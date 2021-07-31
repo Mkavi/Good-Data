@@ -1,7 +1,9 @@
 import React, { useState } from "react";
+
 import {
   newMeasure,
-  idRef,attributeDisplayFormRef, 
+  idRef,
+  attributeDisplayFormRef,
   newPositiveAttributeFilter,
   isNegativeAttributeFilter
 } from "@gooddata/sdk-model";
@@ -14,21 +16,22 @@ import {
   attributeIdentifier,
   newNegativeAttributeFilter
 } from "@gooddata/sdk-model";
+
+import "../custom.scss";
 import { InsightView } from "@gooddata/sdk-ui-ext";
 import * as Ldm from "../md/full";
 import * as LdmExt from "../md/ext";
 import ExcelExport from "./ExcelExport";
-import "../sai.css";
 import { GDModal } from "../components/Modal";
 import { GDHighCharts } from "../components/Highcharts";
 
-export default () => {
+const ParentChildFilter = () => {
   const [modalData, setModalData] = useState({ show: false, data: null });
 
   const barChartClickHanlder = data => {
     setModalData({
-        show: true,
-        data: {
+      show: true,
+      data: {
         category: data.category,
         value: data.y,
         status: data.series?.name
@@ -264,12 +267,14 @@ export default () => {
   const [orderStatusFilter, setOrderStatusFilter] = useState({});
   const [productCategoryFilter, setProductCategoryFilter] = useState(
     newNegativeAttributeFilter(attributeDisplayFormRef(Ldm.ProductCategory), {
-        uris: [],
-    }),
-);
+      uris: []
+    })
+  );
   const [productNameFilter, setProductNameFilter] = useState(
-    newNegativeAttributeFilter(attributeDisplayFormRef(Ldm.ProductName), { uris: [] })
-);
+    newNegativeAttributeFilter(attributeDisplayFormRef(Ldm.ProductName), {
+      uris: []
+    })
+  );
   const [customerRegionFilter, setCustomerRegionFilter] = useState({});
   const [customerStateFilter, setCustomerStateFilter] = useState({});
   const [customerCityFilter, setCustomerCityFilter] = useState({});
@@ -346,8 +351,12 @@ export default () => {
           <AttributeFilter
             //identifier={attributeIdentifier(Ldm.ProductName)}
             filter={productNameFilter}
-            parentFilters={productCategoryFilter ? getFilters([productCategoryFilter]) : []}
-            parentFilterOverAttribute={idRef(LdmExt.productIdAttributeIdentifier)}
+            parentFilters={
+              productCategoryFilter ? getFilters([productCategoryFilter]) : []
+            }
+            parentFilterOverAttribute={idRef(
+              LdmExt.productIdAttributeIdentifier
+            )}
             onApply={filter => {
               updateFilters(filter, setProductNameFilter, "productName");
             }}
@@ -585,3 +594,5 @@ export default () => {
     </>
   );
 };
+
+export default ParentChildFilter;

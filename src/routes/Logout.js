@@ -4,16 +4,19 @@ import Page from "../components/Page";
 import LogoutForm from "../components/Auth/LogoutForm";
 import { useAuth } from "../contexts/Auth";
 
-import pageStyles from "../components/Page.module.scss";
+import pageStyles from "../components/Page/Page.module.scss";
 
 const Logout = () => {
-    const { logout } = useAuth();
+  const { logout } = useAuth();
 
-    return (
-        <Page className={pageStyles.Inverse} mainClassName={pageStyles.VerticalCenter}>
-            <LogoutForm logout={logout} />
-        </Page>
-    );
+  return (
+    <Page
+      className={pageStyles.Inverse}
+      mainClassName={pageStyles.VerticalCenter}
+    >
+      <LogoutForm logout={logout} />
+    </Page>
+  );
 };
 
 export default Logout;
