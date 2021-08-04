@@ -22,6 +22,7 @@ import ExcelExport from "./ExcelExport";
 import "../sai.css";
 import { GDModal } from "../components/Modal";
 import { GDHighCharts } from "../components/Highcharts";
+import { colors } from "@material-ui/core";
 
 export default () => {
   const [modalData, setModalData] = useState({ show: false, data: null });
@@ -39,9 +40,9 @@ export default () => {
 
   const getChartData = result => {
     const colors = {
-      cancelled: "rgb(195,255,176)",
-      delivered: "rgb(175,232,255)",
-      returned: "rgb(255,143,179)"
+      cancelled: "#C1FDB0",
+      returned: "#F4BFE3",
+      delivered: "#AEE7FE"
     };
 
     const { data = [], headerItems = [] } = result.dataView || {};
@@ -156,6 +157,7 @@ export default () => {
       credits: {
         enabled: false
       },
+      colors: ["#95CEFE", "#F0A7CB", "#A8FD97"],
       xAxis: {
         categories: barChartData.categories
       },
@@ -488,7 +490,7 @@ export default () => {
         <div className="container3">
           <div className="container31">
             {" "}
-            <label>Top 10 Products by Region</label>{" "}
+            <label>Total Orders by Region</label>{" "}
           </div>
           <div className="container31">
             {" "}
