@@ -203,53 +203,53 @@ export default () => {
         causedFilter: filterName
       });
       return [];
-      // } else {
-      //   return [
-      //     {
-      //       positiveAttributeFilter: {
-      //         displayForm,
-      //         in: inElements
-      //       }
-      //     }
-      //   ];
+    } else {
+      return [
+        {
+          positiveAttributeFilter: {
+            displayForm,
+            in: inElements
+          }
+        }
+      ];
     }
   };
 
-  // const filterNegativeAttribute = filter => {
-  //   const {
-  //     negativeAttributeFilter: { notIn, displayForm }
-  //   } = filter;
+  const filterNegativeAttribute = filter => {
+    const {
+      negativeAttributeFilter: { notIn, displayForm }
+    } = filter;
 
-  //   const checkLengthOfFilter = isAttributeElementsByRef(notIn)
-  //     ? notIn.uris.length !== 0
-  //     : notIn.values.length !== 0;
-  //   return checkLengthOfFilter
-  //     ? [
-  //         {
-  //           negativeAttributeFilter: {
-  //             displayForm,
-  //             notIn
-  //           }
-  //         }
-  //       ]
-  //     : [];
-  // };
+    const checkLengthOfFilter = isAttributeElementsByRef(notIn)
+      ? notIn.uris.length !== 0
+      : notIn.values.length !== 0;
+    return checkLengthOfFilter
+      ? [
+          {
+            negativeAttributeFilter: {
+              displayForm,
+              notIn
+            }
+          }
+        ]
+      : [];
+  };
 
   const updateFilters = (filter, setState, filterName) => {
-    // setState();
+    setState([]);
     setFilterError({
       message: undefined,
       causedFilter: undefined
     });
 
-    // let filters = [];
+    let filters = [];
     if (isPositiveAttributeFilter(filter)) {
-      filterPositiveAttribute(filter, filterName);
-      // } else {
-      //   filters = filterNegativeAttribute(filter);
+      filters = filterPositiveAttribute(filter, filterName);
+    } else {
+      filters = filterNegativeAttribute(filter);
     }
 
-    setState(filter);
+    setState({ filters });
 
     setFiltersLabels(prevState => ({
       ...prevState,
@@ -273,26 +273,10 @@ export default () => {
       uris: []
     })
   );
-  const [customerRegionFilter, setCustomerRegionFilter] = useState(
-    newNegativeAttributeFilter(attributeDisplayFormRef(Ldm.CustomerRegion), {
-      uris: []
-    })
-  );
-  const [customerStateFilter, setCustomerStateFilter] = useState(
-    newNegativeAttributeFilter(attributeDisplayFormRef(Ldm.CustomerState), {
-      uris: []
-    })
-  );
-  const [customerCityFilter, setCustomerCityFilter] = useState(
-    newNegativeAttributeFilter(attributeDisplayFormRef(Ldm.CustomerCity), {
-      uris: []
-    })
-  );
-  const [customerNameFilter, setCustomerNameFilter] = useState(
-    newNegativeAttributeFilter(attributeDisplayFormRef(Ldm.CustomerName), {
-      uris: []
-    })
-  );
+  const [customerRegionFilter, setCustomerRegionFilter] = useState({});
+  const [customerStateFilter, setCustomerStateFilter] = useState({});
+  const [customerCityFilter, setCustomerCityFilter] = useState({});
+  const [customerNameFilter, setCustomerNameFilter] = useState({});
 
   const [filtersLabels, setFiltersLabels] = useState({
     orderStatus: "All",
@@ -305,17 +289,17 @@ export default () => {
   });
 
   const getFilters = filters =>
-    filters.reduce((acc, f = {}) => {
-      // const f = current.filter;
+    filters.reduce((acc, current = {}) => {
+      const attrFilters = current.filters || [];
       let applicableFilters = [];
 
-      // attrFilters.forEach(f => {
-      if (isPositiveAttributeFilter(f) || isNegativeAttributeFilter(f)) {
-        if (!filterIsEmpty(f)) {
-          applicableFilters.push(f);
+      attrFilters.forEach(f => {
+        if (isPositiveAttributeFilter(f) || isNegativeAttributeFilter(f)) {
+          if (!filterIsEmpty(f)) {
+            applicableFilters.push(f);
+          }
         }
-      }
-      // });
+      });
 
       return acc.concat(applicableFilters);
     }, []);
@@ -365,7 +349,9 @@ export default () => {
           <AttributeFilter
             //identifier={attributeIdentifier(Ldm.ProductName)}
             filter={productNameFilter}
-            parentFilters={productCategoryFilter ? [productCategoryFilter] : []}
+            parentFilters={
+              productCategoryFilter ? getFilters([productCategoryFilter]) : []
+            }
             parentFilterOverAttribute={idRef(
               LdmExt.productIdAttributeIdentifier
             )}
@@ -382,7 +368,7 @@ export default () => {
         <div className="filter">
           <span className="label_filter">Customer Region</span>
           <AttributeFilter
-            filter={customerRegionFilter}
+            filter={newNegativeAttributeFilter(Ldm.CustomerRegion, [])}
             onApply={filter => {
               updateFilters(filter, setCustomerRegionFilter, "customerRegion");
             }}
@@ -397,11 +383,8 @@ export default () => {
         <div className="filter">
           <span className="label_filter">Customer State</span>
           <AttributeFilter
-            filter={customerStateFilter}
-            parentFilters={customerRegionFilter ? [customerRegionFilter] : []}
-            parentFilterOverAttribute={idRef(
-              LdmExt.customerIdAttributeIdentifier
-            )}
+            filter={newNegativeAttributeFilter(Ldm.CustomerState, [])}
+            parentFilters={getFilters([customerRegionFilter])}
             onApply={filter => {
               updateFilters(filter, setCustomerStateFilter, "customerState");
             }}
@@ -417,11 +400,7 @@ export default () => {
           <span className="label_filter">Customer City</span>
           <AttributeFilter
             // identifier={attributeIdentifier(Ldm.CustomerCity)}
-            filter={customerCityFilter}
-            parentFilters={customerStateFilter ? [customerStateFilter] : []}
-            parentFilterOverAttribute={idRef(
-              LdmExt.customerIdAttributeIdentifier
-            )}
+            filter={newNegativeAttributeFilter(Ldm.CustomerCity, [])}
             onApply={filter => {
               updateFilters(filter, setCustomerCityFilter, "customerCity");
             }}
@@ -436,11 +415,7 @@ export default () => {
           <span className="label_filter">Customer Name</span>
           <AttributeFilter
             // identifier={attributeIdentifier(Ldm.CustomerName)}
-            filter={customerNameFilter}
-            parentFilters={customerCityFilter ? [customerCityFilter] : []}
-            parentFilterOverAttribute={idRef(
-              LdmExt.customerIdAttributeIdentifier
-            )}
+            filter={newNegativeAttributeFilter(Ldm.CustomerName, [])}
             onApply={filter => {
               updateFilters(filter, setCustomerNameFilter, "customerName");
             }}
@@ -583,25 +558,13 @@ export default () => {
         </div>
         <div className="clr"></div>
         <div className="block1" style={{ height: 550 }}>
-          {filterError.message ? (
-            <ErrorComponent message={filterError.message} />
-          ) : (
-            <InsightView
-              insight={"abG4RMpBhZyp"}
-              config={{
-                enableCompactSize: true
-              }}
-              filters={getFilters([
-                orderStatusFilter,
-                productCategoryFilter,
-                productNameFilter,
-                customerRegionFilter,
-                customerStateFilter,
-                customerCityFilter,
-                customerNameFilter
-              ])}
-            />
-          )}
+          <InsightView
+            insight={"abG4RMpBhZyp"}
+            config={{
+              enableCompactSize: true
+            }}
+            // filters={filters}
+          />
         </div>
       </div>
 
@@ -622,12 +585,7 @@ export default () => {
             ]),
             newPositiveAttributeFilter(Ldm.OrderStatus, [
               modalData.data?.status
-            ]),
-            productCategoryFilter,
-            productNameFilter,
-            customerStateFilter,
-            customerCityFilter,
-            customerNameFilter
+            ])
           ]}
         />
       </GDModal>
