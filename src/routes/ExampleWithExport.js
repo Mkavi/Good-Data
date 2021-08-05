@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 // import { IExtendedExportConfig, IExportFunction } from "@gooddata/sdk-ui";
 // import { IFilter } from "@gooddata/sdk-model";
-import "../sai.css";
+import "../scss/custom.scss";
 
 const style = { height: 367 };
 const buttonsContainerStyle = { marginTop: 15 };

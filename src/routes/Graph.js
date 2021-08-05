@@ -1,7 +1,6 @@
 import React from "react";
 import "../App.css";
 import ReactApexChart from "react-apexcharts";
-import * as Ldm from "../md/full";
 
 function Graph() {
   const series = [

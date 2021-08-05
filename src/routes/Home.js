@@ -16,15 +16,16 @@ import {
   newNegativeAttributeFilter
 } from "@gooddata/sdk-model";
 import { InsightView } from "@gooddata/sdk-ui-ext";
+import Page from "../components/Page";
+import "../scss/custom.scss";
 import * as Ldm from "../md/full";
 import * as LdmExt from "../md/ext";
 import ExcelExport from "./ExcelExport";
-import "../sai.css";
 import { GDModal } from "../components/Modal";
 import { GDHighCharts } from "../components/Highcharts";
 import { colors } from "@material-ui/core";
 
-export default () => {
+const Home = () => {
   const [modalData, setModalData] = useState({ show: false, data: null });
 
   const barChartClickHanlder = data => {
@@ -323,7 +324,7 @@ export default () => {
     }, []);
 
   return (
-    <>
+    <Page>
       <h3>Orders</h3>
       <div className="container1">
         <div className="filter">
@@ -633,6 +634,8 @@ export default () => {
           ]}
         />
       </GDModal>
-    </>
+    </Page>
   );
 };
+
+export default Home;

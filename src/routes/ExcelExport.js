@@ -1,8 +1,7 @@
 import React from "react";
 import { InsightView } from "@gooddata/sdk-ui-ext";
 import { ExampleWithExport } from "./ExampleWithExport";
-import "../sai.css";
-import { newAbsoluteDateFilter } from "@gooddata/sdk-model";
+import "../scss/custom.scss";
 
 export const ExcelExport = () => {
   return (
