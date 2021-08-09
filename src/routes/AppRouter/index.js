@@ -8,6 +8,7 @@ import Login from "../Login";
 import Logout from "../Logout";
 import Welcome from "../Welcome";
 import Home from "../Home";
+import LeafletMap from "../LeafletPage";
 
 import styles from "./AppRouter.module.scss";
 
@@ -35,6 +36,7 @@ const AppRouter = () => {
           />
           <Route exact path="/login" component={Login} />
           <Route exact path="/logout" component={Logout} />
+          <Route exact path="/map" component={LeafletMap} />
           {/* DELETE THIS LINE */} <Redirect to="/welcome" />
           {/* Uncomment the next line if you want to redirect unauthorized users to login form */}
           {/* <RedirectIfNotLoggedIn /> */}
